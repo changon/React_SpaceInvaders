@@ -1,0 +1,29 @@
+module.exports = {
+	entry: './src/client.js',
+	output: {
+		path: './public',
+		filename: 'bundle.js'
+	},
+	module:{
+		loaders: [
+			{
+				test:[/\.js$/,/\.jsx$/],
+				exclude: /node_modules/,
+				loader: 'babel-loader'
+			},
+			{
+				test: /\.(png|jpg)$/,
+				loader: 'file-loader'//?name=resrc
+				//http://stackoverflow.com/questions/37671342/how-to-load-image-files-with-webpack-file-loader
+				//http://stackoverflow.com/questions/34582405/react-wont-load-local-images
+			},
+			{
+				test: /\.(mp3|wav)$/,
+				loader: 'file-loader'//?name=resrc
+			}
+		]
+	},
+	resolve:{
+		extensions: ['','.js', '.jsx','.json']
+	}
+};

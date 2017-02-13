@@ -1,0 +1,93 @@
+@font-face{
+	font-family: "ArcadeClassic";
+	src: require("..resrc/fonts/ARCADECLASSIC.TTF");
+}
+
+h1{
+	font-family: "ArcadeClassic";
+	text-align: center;
+}
+
+.slot{
+	height: 100px;
+	width: 100px;
+	background-color: #FFF8DC;
+	font-size: 20px;
+}
+
+#Field{
+	background-color: black;
+	height: 600px;
+	width: 800px;
+}
+
+#meta{
+	background-color: black;
+	height: 100px;
+	width: 800px;
+	color: white;
+	text-align: center;
+	font-family: "ArcadeClassic";
+}
+
+#lowmeta{
+	background-color: black;
+	height: 50px;
+	width: 800px;
+	color: white;
+	text-align: center;
+	font-family: "ArcadeClassic";
+}
+
+#lowborder{
+	background-color: green;
+	height:2px;
+	width: 800px;
+}
+
+#intro{
+	background-color: black;
+	color: white;
+	font-family: "ArcadeClassic";
+	font-size: 30px;
+	text-align: center;
+	height: 600px;
+	width: 800px;
+}
+
+#Field{
+	color: white;
+	font-family: "ArcadeClassic";
+	font-size: 30px;
+	text-align: center;
+}
+
+/*http://stackoverflow.com/questions/12922909/how-to-make-text-appear-in-columns-in-html   
+	width is 800/3
+*/
+.column{
+	width: 266px;
+	float: left;
+}
+
+.lowcolumn{
+	width: 400px;
+	float: left;
+}
+
+/*
+#highintro{
+	background-color: black;
+	height: 100px;
+	width: 800px;
+	color: white;
+	text-align: center;
+	font-family: "ArcadeClassic";
+}
+
+#lowintro{
+	background-color: green;
+	height:2px;
+	width: 800px;
+}
+*/
