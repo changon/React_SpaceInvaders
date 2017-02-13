@@ -1075,7 +1075,7 @@ export default class Game extends React.Component
 				//stereo into right and left ear if you are about to run into a bullet. if bullet is on your left then signal noise on that side. detect? via check if right position or left position + velocity has it, if collision, then play noise and do not move
 				this.setState({xvelocity: -this.state.ogxvelocity});
 				var potentialx = this.state.x+this.state.xvelocity;
-				if(this.collide())//if collision with bullet
+				//if(this.collide())//if collision with bullet
 				if(potentialx <= 0)
 				{
 					window.speechSynthesis.cancel();
