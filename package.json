@@ -1,5 +1,5 @@
 {
-  "name": "firstreact",
+  "name": "space_invaders",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -28,5 +28,6 @@
   },
   "devDependencies": {
     "concurrently": "^3.1.0"
-  }
+  },
+  "build:production": "NODE_ENV=production webpack --optimize-minimize"
 }

@@ -3,29 +3,18 @@ import ReactDOM from 'react-dom';
 
 //css green '#4abd12'
 /*TODO: 
-	DONE. now ERASE BARRIERS as enemies go across. When end of screen reached, playerl oses. 
-	when to dramatically speed up the space invaders? in normal mode.
-	smoother enemy animation rm-al. remove enemy sprite, then puff
-		timer
-	have pixel rm-als larger so barrier deterioration looks cleaner
-	background music
-	smoother increase when enemies get low
-	bullet enemy bullet collisions (rm player bullet and rm enemy bullet by chance)
-	lower pitch sound file on special enemy
-	decrease enemy bullet velocity
-	enemyx to proportional values to canvas
-	functionize an escape sequence in gameover or lifelost
-	
+	visual mode decide on degrees of freedom. 
+		Instructions on first time access to website (on refresh no instructions), new tab, etc.
+		sit through instructions without starting game
+		high score visual mode, normal mode, replace score <2> banner
+		stereo into right and left ear if you are about to run into a bullet. if bullet is on your left then signal noise on that side. detect? via check if right position or left position + velocity has it, if collision, then play noise and do not move
+
+		bugs:
+		enemies randomly dissapear??!!!
+
+
 	normal mode
-		Adjust regular parameters. line 723
-			increase enemyxv more and decrease the increase rate of fireRate (firing all too fast)
-	Visual Mode
-		Different parameters using them
-
-Reason why bullets are not seen when hitting the barriers is the velocityo f the bullets is greater than the distance from the tank to the barrier so the bullet jumps to the middle of the barrier (which is all green) and dissapears)
-
-Optimizations: 
-	keep track of indices of enemies that have fired true to make bullet management easier and more efficient rather than going through all the enemies to check for the property. marked in code by Bullet Optimization Here (BOH)
+		Adjust regular parameters
 */
 
 export default class Game extends React.Component
@@ -57,8 +46,7 @@ export default class Game extends React.Component
                                         ]
 				]
 		};
-		
-		var speeds = [6, 1], bveloc = [10, 10], playerspeeds=[5, 1], fireRates = [.005, .1];//.25
+		var speeds = [6, 1], bveloc = [10, 30], playerspeeds=[5, 1.5];//.25
 		super(props);
 		this.state={
 			vIndexOne: -1, vIndexTwo: -1,
@@ -66,7 +54,7 @@ export default class Game extends React.Component
 			x_tanh:-3.5, ogx_tanh: -3.5, xinterval_tanh: .1, //12/100/2/2
 			requestid: null, lowlimit: 15, maxexv: 1/2, 
 			maxlowlimit: 3, //more properly min
-			maxfireRate: 1,//10?//change
+			maxfireRate: .5,//10?//change
 			notimes: 0, numdead: 0, pastnumdead: 0, 
 			lvlclear: false, lifelost: false, gameover: false, set: false,
 			numberlives: 3, credit: 4, rmEnemy: true, bullettimer: null, start: false, stagger: 0,
@@ -133,8 +121,8 @@ export default class Game extends React.Component
 			enemyxv: 0.03 /*[.06,.06,.06,.06,.06]*/
 			, enemyyv: 30, pastx: -100, ogenemyxv: 0.06, 
 			resetEnemies: false,
-			fireRate: speeds[types.MODE[this.props.mode]],//.005//.5,// .01, //multiplied by 1,000,000 1 mill
-			ogfireRate: speeds[types.MODE[this.props.mode]],
+			fireRate: 10,// .01, //multiplied by 1,000,000 1 mill
+			ogfireRate: .01,
 			barrierx: [], barriery: [], barriersize: 60,
 			playersize: 30, enemysize: 30, offset: 10, rmEnemy: [],
 			//images
@@ -159,8 +147,7 @@ export default class Game extends React.Component
 			died: new Audio(require('../resrc/sounds/explosion.wav')),
 			winner: new Audio(require('../resrc/sounds/winner.mp3')),
 			specialEnemyHere: new Audio(require('../resrc/sounds/ufo_highpitch.wav')),
-			warning: new Audio(require('../resrc/sounds/Alien_Siren.mp3')),
-			crumbling: new Audio(require('../resrc/sounds/crumbling.mp3'))
+			warning: new Audio(require('../resrc/sounds/Alien_Siren.mp3'))
 		};
 		this.move = this.move.bind(this);//React components using ES6 classes no longer autobind this to non React methods. Thus in constructor add this binding
 		this.stopmove=this.stopmove.bind(this);//upon key lift stop mvment
@@ -177,7 +164,6 @@ export default class Game extends React.Component
 		this.load = this.load.bind(this);//load in the resources
 		this.reparameterize = this.reparameterize.bind(this);
 		this.nearbyVisualCheck = this.nearbyVisualCheck.bind(this);
-		this.enemyErase = this.enemyErase.bind(this);
 	}
 	componentDidMount()
 	{
@@ -371,8 +357,6 @@ export default class Game extends React.Component
 							width = this.state.bsize; 
 							height = this.state.bsize*2;
 							this.bulletReset();
-							if(this.state.visual)//indicate to audio player that they shot a barrier.
-								this.state.crumbling.play();
 						}
 					}
 				}
@@ -594,17 +578,16 @@ export default class Game extends React.Component
 		var factor = 1;//based on no of times cleared, make harder
 		for (var  i =0; i< numclear/2; i++)
 			factor *= 1.04;
-
+		
 		this.setState({ x: this.state.ogx, y: this.state.ogy 
-			, enemyxv: this.state.ogenemyxv*factor, numdead: 0, lvlclear: false, ebulletsfired: 0,
+			, enemyxv: this.state.ogenemyxv*factor, numdead: 0, lvlclear: false, 
 			difficulty: this.state.ogdifficulty*factor, decreasefactor: factor*this.state.ogdecreasefactor,
 			lowlimit: this.state.oglowlimit, fireRate: this.state.ogfireRate
 			, x_tanh: this.state.ogx_tanh
 		});
-
-		alert('og diff ' + this.state.difficulty+'. og dec is '+this.state.decreasefactor + '.  og low lim is '+ this.state.lowlimit + '. this.state.ogfireRate '+ this.state.fireRate);
 	//	var arr = [this.state.x, this.state.y, this.state.enemyxv, 
 //this.state.difficulty, this.state.decreasefactor, this.state.lowlimit, this.state.fireRate, this.state.x_tanh];
+	//	console.log('reset ' + arr);
 		var tmpX = [[],[],[],[],[]], tmpY = [[],[],[],[],[]];
 		var offing = this.state.enemysize*numclear;
 
@@ -664,6 +647,7 @@ export default class Game extends React.Component
 						if (xpos >= this.state.enemyx[i][j] && xpos <= this.state.enemyx[i][j]+this.state.enemysize)
 							if (!barrierblock)//if in range, and barrier is not in the way, compare to find the closest enemy and mark it
 							{
+			//console.log('enemy!' + i ' is i. j is '+j);
 								var x = this.abs(this.state.enemyx[i][j]-this.state.x);
 								var y = this.abs(this.state.enemyy[i][j]-this.state.y);
 								if(x*x+y*y > max)
@@ -694,32 +678,8 @@ export default class Game extends React.Component
 			this.setState({ vIndexOne: maxIndexone, vIndexTwo: maxIndextwo });
 		}
 	}
-	enemyErase()//is the enemy making contact with the barrier? if so, then rm the barrier. More enemy erasing*
-	{
-		//check collision with barrier
-		var barrierXUpdate=[], barrierYUpdate=[];
-		var count=0;
-		for (var i=0;i<this.state.barrierx.length;i++)
-		{
-			var rm = false;
-			for(var j=0;j<5;j++)
-				for(var k=0;k<this.state.numEnemies;k++)
-					if(this.collide(this.state.barrierx[i], this.state.barriery[i], this.state.enemyx[j][k], this.state.enemyy[j][k], this.state.enemysize))
-					//detect collision with enemy and barrier, if collision there, then rm is true
-						rm=true;
-			if(!rm)
-			{
-				barrierXUpdate[count] = this.state.barrierx[i];
-				barrierYUpdate[count++] = this.state.barriery[i];
-			}
-		}
-		this.setState({barrierx: barrierXUpdate, barriery: barrierYUpdate});
-		//do this when the enemy is past a certain point, do this smarter removing certain areas based on less information. This loop is too computationally expensive in combinations with other inefficient functionalities.
-		//this.enemyErase();
-	}			
 	update()
 	{
-console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 		//if you die
 		if(this.state.lifelost)
 		{
@@ -731,13 +691,10 @@ console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 		//check if no enemies remain. Set params back to og, and go again
 		if(this.state.numdead == 5*this.state.numEnemies)
 		{
-			console.log(this.state.fireRate);
+			this.state.winner.play();
 			this.setState({ /*resetEnemies: true,*/ set: false, start: false, numdead: 0
 				, lvlclear: true, notimes: this.state.notimes+1, activeSpecial: false
 			});
-			this.state.winner.play();
-			if(this.state.visual)
-				window.speechSynthesis.speak(new SpeechSynthesisUtterance(', , , , , Your score is '+this.state.score ));//+ ', Click any button to continue'));
 			return;
 		}
 
@@ -752,9 +709,8 @@ console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 		if(this.state.pastnumdead != this.state.numdead)//make game harder if enemies killed
 		{
 			var tmpx_tanh = this.state.x_tanh+this.state.xinterval_tanh;
-			var x_inc = Math.exp(tmpx_tanh)/2+1;  //*Math.exp(this.state.x_tanh);
-			var fx = 1.1;
-			var tmpxv = x_inc*this.state.ogenemyxv;
+			var fx = Math.exp(tmpx_tanh)/2+1;  //*Math.exp(this.state.x_tanh);
+			var tmpxv = fx*this.state.ogenemyxv;
 			if(this.state.enemyxv < 0)
 				tmpxv*=-1;
 			
@@ -766,9 +722,8 @@ console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 					, lowlimit: this.state.oglowlimit/this.state.decreasefactor ///1.03 //decrease factor makes it too fastgood number for this decreasing via enemy death on frames
 					, fireRate: this.state.fireRate*fx, x_tanh: tmpx_tanh
 				});
-	//max speed up.
 				if (this.state.numdead > 44)
-					this.setState({ enemyxv: tmpxv*1.8});//increase more rapidly twoards the end
+					this.setState({ enemyxv: tmpxv*fx});//increase more rapidly twoards the end
 				if(this.state.fireRate > this.state.maxfireRate)
 					this.setState({ fireRate: this.state.maxfireRate });
 				if(this.abs(this.state.enemyxv) > this.state.maxexv)
@@ -795,7 +750,6 @@ console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 			this.setState({ fireRate: this.state.maxfireRate });
 		}
 		var yupdate=0;
-
 		////ENEMY PARAMETER ADJUSTMENTS via enemy increase (more than row increase)////
 		if (this.state.upperx > this.state.width-this.state.enemysize || this.state.lowerx < 0)
 		{
@@ -835,9 +789,6 @@ console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 		for (var i=4; i > -1; i--)
 		{
 			var tmpt = this.enemyUpdate(i, stagger);
-///BUG HERE
-			if(this.state.gameover)//break out if enemies reach your laser base/end of screen
-				return;
 			tmpsx[i] = tmpt[0];
 			tmpsy[i] = tmpt[1];
 			tmpFired[i] = tmpt[2];
@@ -850,6 +801,7 @@ console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 			enemybx: tmpbx, enemyby: tmpby, 
 			ebStagger: tmpStag
 		});
+
 		//bullet
 		if(this.state.fired)
 		{
@@ -933,7 +885,6 @@ console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 					if(true)
 						this.state.ctx.drawImage(img, this.state.enemyx[i][j], this.state.enemyy[i][j], this.state.enemysize, this.state.enemysize);
 				}
-				this.state.enemyFired[i][j]=false;//make sure bullets fired from before dissapear
 			}
 		}
 		//through barrierdeath
@@ -958,11 +909,6 @@ console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 	}
 	enemyUpdate(row, stagger)
 	{
-//215 y position right in front of barreir
-//245 y pos first step in barrier
-//305 in front of me
-//335 past me
-//365 end of screen
 		var tmpx = this.state.enemyx[row], tmpy = this.state.enemyy[row];
 		var tmpFired = this.state.enemyFired[row];
 		var tmpEnemybx=this.state.enemybx[row], tmpEnemyby=this.state.enemyby[row];
@@ -972,20 +918,12 @@ console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 		{
 			if(this.state.enemyState[row][i] == 'ALIVE')
 			{
-				if (this.state.enemyy[row][i] >= 565)//you lose game if it goes past your laser base
-				{
-					this.setState({gameover: true});
-					this.props.onNewGame(this.state.score);//send back score (up to parent) to see if its high score and reset game
-					return;
-				}
 				//to shoot or not to shoot
 				if(!this.state.enemyFired[row][i])
 				{
 					//roll a die to fire
 					var test = Math.random()*100;
-	//if(this.state.ebulletsfired <=3)
-	//console.log(test + ' . ' + this.state.fireRate+' ebulletsfired ' + this.state.ebulletsfired);
-					if (test < this.state.fireRate && this.state.ebulletsfired<3)//max three bullets allowed to be fired at once
+					if (test < this.state.fireRate && this.state.ebulletsfired<=3)//max three bullets allowed to be fired at once
 					{
 						tmpFired[i] = true;
 						this.setState({ ebulletsfired: this.state.ebulletsfired+1 });
@@ -1059,17 +997,7 @@ console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 					if(this.state.numberlives == 0)
 					{
 						this.setState({gameover: true});
-						this.props.onNewGame(this.state.score);//send back score (up to parent) to see if its high score
-					}
-					if(this.state.visual)//state how many lives left
-					{
-						window.speechSynthesis.cancel();
-						if(this.state.numberlives > 1)
-							window.speechSynthesis.speak(new SpeechSynthesisUtterance(this.state.numberlives+' lives left'));
-						if(this.state.numberlives==1)
-							window.speechSynthesis.speak(new SpeechSynthesisUtterance(this.state.numberlives+' life left'));
-						if(this.state.numberlives == 0)
-							window.speechSynthesis.speak(new SpeechSynthesisUtterance('Game Over'));
+						this.props.onNewGame(this.state.score);
 					}
 					tmpFired[i]=false;//collision happened, so turn off fire on bullet
 					this.setState({lifelost: true, set: false, start: false});
@@ -1144,53 +1072,27 @@ console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 	        	var k = event.keyCode;
 	                if(k==37)//move left
 			{
+				//stereo into right and left ear if you are about to run into a bullet. if bullet is on your left then signal noise on that side. detect? via check if right position or left position + velocity has it, if collision, then play noise and do not move
 				this.setState({xvelocity: -this.state.ogxvelocity});
 				var potentialx = this.state.x+this.state.xvelocity;
 				//if(this.collide())//if collision with bullet
-				if(this.state.visual)
+				if(potentialx <= 0)
 				{
-					if(potentialx <= 0)
-					{
-						window.speechSynthesis.cancel();
-						window.speechSynthesis.speak(new SpeechSynthesisUtterance('L Edge'));
-					}
-					potentialx += this.state.xvelocity;
-					//BOH
-					for (var i =0;i<5;i++)
-						for (var j=0;j<this.state.numEnemies; j++)
-							if(this.collide(this.state.enemybx[i][j], this.state.enemyby[i][j], potentialx-5*this.state.playersize/4, this.state.y, this.state.playersize+this.state.playersize/2))
-							//5/4 to detect wider range on left
-							{
-								this.setState({xvelocity: 0});//do not move if in danger
-								window.speechSynthesis.cancel();
-								window.speechSynthesis.speak(new SpeechSynthesisUtterance('Halt'));
-							}
+					window.speechSynthesis.cancel();
+					window.speechSynthesis.speak(new SpeechSynthesisUtterance('L Edge'));
 				}
 			}
 	                else if(k==39)//move right
 			{
 				this.setState({xvelocity: this.state.ogxvelocity});
 				var potentialx = this.state.x+this.state.xvelocity;
-				if(this.state.visual)
+				if(potentialx >= this.state.width-this.state.playersize)
 				{
-					if(potentialx >= this.state.width-this.state.playersize)
-					{
-						window.speechSynthesis.cancel();
-						window.speechSynthesis.speak(new SpeechSynthesisUtterance('R Edge'));
-					}
-					potentialx += this.state.xvelocity;
-					//BOH
-					for (var i =0;i<5;i++)
-						for (var j=0;j<this.state.numEnemies; j++)
-							if(this.collide(this.state.enemybx[i][j], this.state.enemyby[i][j], potentialx+this.state.playersize/4, this.state.y, this.state.playersize+this.state.playersize/2))
-							{
-								this.setState({xvelocity: 0});//do not move if in danger
-								window.speechSynthesis.cancel();
-								window.speechSynthesis.speak(new SpeechSynthesisUtterance('Halt'));
-							}
+					window.speechSynthesis.cancel();
+					window.speechSynthesis.speak(new SpeechSynthesisUtterance('R Edge'));
 				}
 			}
-	                else if(k==32)//space key
+	                else if(k==16)//shift key
 	                {
 				if(this.state.numberlives>0 && !this.state.fired)
 				{

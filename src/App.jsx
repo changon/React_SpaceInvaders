@@ -7,16 +7,31 @@ export default class App extends React.Component{
 	constructor(props)
 	{
 		super(props);
-		var potential = localStorage.getItem('highscore');
-		if (potential == null)
-			potential = '0';
-		if(potential.length < 4)//padding function for four digit score
+		var npotential = localStorage.getItem('nhighscore');
+		if (npotential == null)
+			npotential = '0';
+		if(npotential.length < 4)//padding function for four digit score
 		{
-			var offset=4-potential.length;
+			var offset=4-npotential.length;
 			for(var i=0; i< offset;i++)
-				potential='0'+potential;
-			
+				npotential='0'+npotential;
 		}
+
+		var vpotential = localStorage.getItem('vhighscore');
+		if (vpotential == null)
+			vpotential = '0';
+		if(vpotential.length < 4)//padding function for four digit score
+		{
+			var offset=4-vpotential.length;
+			for(var i=0; i< offset;i++)
+				vpotential='0'+vpotential;
+		}
+		var logged = localStorage.getItem('login');
+		if(logged == null)
+			logged = false;
+		else
+			logged = true;
+		
 		this.normalMode = this.normalMode.bind(this);
 		this.visualMode = this.visualMode.bind(this);
 		this.activate = this.activate.bind(this);
@@ -29,7 +44,7 @@ export default class App extends React.Component{
 		this.repeat = this.repeat.bind(this);
 		this.state={
 			dashcounter: 0, lastspoken: '', lvlclear: false, score: 0,
-			highscore: potential, credit: 4, numberlives: 3, mode: '',
+			vhighscore: vpotential, nhighscore: npotential, credit: 4, numberlives: 3, mode: '',
 			game: <canvas id='intro'> </canvas>, ctx: null,
 			header:<h1>{'Space Invaders'}</h1>, 
 			norm: <button onClick={this.normalMode}>{'Normal'}</button>,
@@ -39,7 +54,8 @@ export default class App extends React.Component{
 			offset: 60, timer: null,
 			printString: '= ?  MYSTERY= 30  POINTS= 20  POINTS= 10  POINTS-PRESS N for Normal Mode-Press V for Visual Mode-Then any button to begin',
 			printIndex: 0, 
-			xoffset: 0, yoffset: 0
+			xoffset: 0, yoffset: 0,
+			instructions: logged
 		};
 	}
 	componentDidMount()
@@ -75,24 +91,48 @@ export default class App extends React.Component{
 	}
 	newGame(score)
 	{
-		//display game over and high scores.
-		var potential = localStorage.getItem('highscore');
-		if (potential != null)
+		if(this.state.mode =='normal')
 		{
-			if (potential < score)
+			//display game over and high scores.
+			var potential = localStorage.getItem('nhighscore');
+			if (potential != null)
 			{
-				localStorage.setItem('highscore', score);
+				if (potential < score)
+				{
+					localStorage.setItem('nhighscore', score);
+					potential = score;
+				}
+			}
+			else
+			{
+				localStorage.setItem('nhighscore', score);
 				potential = score;
 			}
+			//set high score in meta
+			this.setState({ nhighscore: potential, credit: this.state.credit-1});
+			setTimeout(function(){ document.location.reload(true); }, 2000);//two seconds before new game started
 		}
-		else
+		else if(this.state.mode=='visual')//incase it may be some other random thing to trigger else
 		{
-			localStorage.setItem('highscore', score);
-			potential = score;
+			//display game over and high scores.
+			var potential = localStorage.getItem('vhighscore');
+			if (potential != null)
+			{
+				if (potential < score)
+				{
+					localStorage.setItem('vhighscore', score);
+					potential = score;
+				}
+			}
+			else
+			{
+				localStorage.setItem('vhighscore', score);
+				potential = score;
+			}
+			//set high score in meta
+			this.setState({ vhighscore: potential, credit: this.state.credit-1});
+			setTimeout(function(){ document.location.reload(true); }, 2000);//two seconds before new game started
 		}
-		//set the high score in meta.
-		this.setState({ highscore: potential, credit: this.state.credit-1});
-		setTimeout(function(){ document.location.reload(true); }, 2000);
 	}
 	setMeta(score, numlives)
 	{
@@ -120,16 +160,19 @@ export default class App extends React.Component{
 			if(this.state.dashcounter == 1)
 			{
 				var msg='PRESS N for Normal Mode,';
-				window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+				if(!this.state.instructions)
+					window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
 			}
 			else if(this.state.dashcounter ==2)
 			{
 				var msg='Press v for Visual Mode,';
-				window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+				if(!this.state.instructions)
+					window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
 			}
 			else{
 				var msg='Then any button to begin,';
-				window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+				if(!this.state.instructions)
+					window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
 			}
 		}
 		else //all else, just print letter by letter with 15 offset
@@ -152,8 +195,14 @@ export default class App extends React.Component{
 			this.normalMode();
 		else if(k==86)//v
 			this.visualMode();
-		else if(k==82)//r
+		else if(k==82)//r for any instruction you may have missed
 			this.repeat();
+		else if(k== 75)//k
+		{
+			window.speechSynthesis.cancel();
+		}
+		else if(k==77)//'m' to reset to menu
+			document.location.reload(true);
 	}
 	repeat()
 	{
@@ -162,8 +211,7 @@ export default class App extends React.Component{
 	}
 	setup()
 	{
-		//https://www.html5rocks.com/en/tutorials/canvas/hidpi/
-		///see link above for resolution of text in canvas; canvas is set for proper resolution of img and text here
+		//https://www.html5rocks.com/en/tutorials/canvas/hidpi/ . see link for resolution of text in canvas; canvas is set for proper resolution of img and text here
 		var PIXEL_RATIO = (function () {
 		    var ctx = document.createElement("canvas").getContext("2d"),
 		        dpr = window.devicePixelRatio || 1,
@@ -210,8 +258,11 @@ export default class App extends React.Component{
 		this.state.timer = setTimeout(this.write, 500); 
 
 		//custom functionality for repeating audio if last instruction spoken not clearly heard 
-		msg = 'Press r to repeat the last instruction spoken,';
-		window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+		
+		msg = 'Click k to skip the instructions, r to repeat';
+		if(!this.state.instructions)
+			window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+		
 		this.setState({lastspoken: 'PRESS N for Normal Mode, '+'Press v for Visual Mode'});
 
 		//for img formatting
@@ -230,8 +281,13 @@ export default class App extends React.Component{
 		});
 		clearTimeout(this.state.timer);//stop printing text
 		var msg = 'You have selected Normal Mode, The game will proceed as the original space invaders, Click any button to begin';
+		if(!this.state.instructions)
+		{
+			window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+			localStorage.setItem('login', true);
+		}
 		this.setState({lastspoken: msg});
-//		window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+		//this.setState({instr: true});
 	}
 	visualMode()
 	{
@@ -246,15 +302,21 @@ export default class App extends React.Component{
 		var tmp = 'When invaders shoot and you are in the line of fire, you will hear a siren signalling you to move, , When an invaders is in range, you will be told to shoot. If you cannot shoot an enemy where you are, whether it is a barrier or no enemy, you will be told no enemy.';
 		var xtra = ' The last command said applies until a new command is said. So if the last you hear is shoot and nothing else is said for 20 seconds, that means you have been able to shoot an enemy for those 20 seconds';
 		var msg = 'You have selected Visual Mode, '+ tmp + ', Click any button to begin';
+		if(!this.state.instructions)
+		{
+			window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+			localStorage.setItem('login', true);
+		}
 		this.setState({lastspoken: tmp});
-//		window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+		
+		//this.setState({instr: true});
 	}
 	render()
 	{
 		return(
 			<div>
 				<div> {this.state.header} </div>
-				<Meta score = {this.state.score} highscore={this.state.highscore} />
+				<Meta score = {this.state.score} vhighscore={this.state.vhighscore} nhighscore={this.state.nhighscore} />
 				<div> {this.state.game} </div>
 				<LowMeta credit={this.state.credit} lives={this.state.numberlives} />
 			</div>

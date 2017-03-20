@@ -12,15 +12,16 @@ export default class App extends React.Component{
                 return(
                         <div id='meta'>
 				<div className= "column">
-					<h2>{'SCORE< 1 >'}</h2>
+					<h2>{'SCORE'}</h2>
 					{'  '+this.props.score} 
 				</div>
 				<div className= "column">
-					<h2>{'HI-SCORE'}</h2>
-					{'     '+ this.props.highscore}
+					<h2>{'HI-SCORE [N]'}</h2>
+					{'     '+ this.props.nhighscore}
 				</div>
 				<div className= "column">
-					<h2>{'SCORE< 2 >'}</h2>
+					<h2>{'HI-SCORE [V]'}</h2>
+					{'     '+ this.props.vhighscore}
 				</div>
                         </div>
                 );

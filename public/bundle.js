@@ -21791,11 +21791,11 @@
 
 	var _Game2 = _interopRequireDefault(_Game);
 
-	var _Meta = __webpack_require__(313);
+	var _Meta = __webpack_require__(314);
 
 	var _Meta2 = _interopRequireDefault(_Meta);
 
-	var _LowMeta = __webpack_require__(314);
+	var _LowMeta = __webpack_require__(315);
 
 	var _LowMeta2 = _interopRequireDefault(_LowMeta);
 
@@ -21809,15 +21809,28 @@
 
 			var _this = (0, _possibleConstructorReturn3.default)(this, (App.__proto__ || (0, _getPrototypeOf2.default)(App)).call(this, props));
 
-			var potential = localStorage.getItem('highscore');
-			if (potential == null) potential = '0';
-			if (potential.length < 4) //padding function for four digit score
+			var npotential = localStorage.getItem('nhighscore');
+			if (npotential == null) npotential = '0';
+			if (npotential.length < 4) //padding function for four digit score
 				{
-					var offset = 4 - potential.length;
+					var offset = 4 - npotential.length;
 					for (var i = 0; i < offset; i++) {
-						potential = '0' + potential;
+						npotential = '0' + npotential;
 					}
 				}
+
+			var vpotential = localStorage.getItem('vhighscore');
+			if (vpotential == null) vpotential = '0';
+			if (vpotential.length < 4) //padding function for four digit score
+				{
+					var offset = 4 - vpotential.length;
+					for (var i = 0; i < offset; i++) {
+						vpotential = '0' + vpotential;
+					}
+				}
+			var logged = localStorage.getItem('login');
+			if (logged == null) logged = false;else logged = true;
+
 			_this.normalMode = _this.normalMode.bind(_this);
 			_this.visualMode = _this.visualMode.bind(_this);
 			_this.activate = _this.activate.bind(_this);
@@ -21830,7 +21843,7 @@
 			_this.repeat = _this.repeat.bind(_this);
 			_this.state = {
 				dashcounter: 0, lastspoken: '', lvlclear: false, score: 0,
-				highscore: potential, credit: 4, numberlives: 3, mode: '',
+				vhighscore: vpotential, nhighscore: npotential, credit: 4, numberlives: 3, mode: '',
 				game: _react2.default.createElement(
 					'canvas',
 					{ id: 'intro' },
@@ -21856,7 +21869,8 @@
 				offset: 60, timer: null,
 				printString: '= ?  MYSTERY= 30  POINTS= 20  POINTS= 10  POINTS-PRESS N for Normal Mode-Press V for Visual Mode-Then any button to begin',
 				printIndex: 0,
-				xoffset: 0, yoffset: 0
+				xoffset: 0, yoffset: 0,
+				instructions: logged
 			};
 			return _this;
 		}
@@ -21865,13 +21879,13 @@
 			key: 'componentDidMount',
 			value: function componentDidMount() {
 				//load resources
-				this.state.enemies[0].src = __webpack_require__(300);
+				this.state.enemies[0].src = __webpack_require__(301);
 				this.state.enemies[0].onload = this.load4; //for syncing problems in canvas
-				this.state.enemies[1].src = __webpack_require__(302);
+				this.state.enemies[1].src = __webpack_require__(303);
 				this.state.enemies[1].onload = this.load3;
-				this.state.enemies[2].src = __webpack_require__(304);
+				this.state.enemies[2].src = __webpack_require__(305);
 				this.state.enemies[2].onload = this.load2;
-				this.state.enemies[3].src = __webpack_require__(306);
+				this.state.enemies[3].src = __webpack_require__(307);
 				this.state.enemies[3].onload = this.load1;
 
 				//once loaded, begin setup process
@@ -21901,22 +21915,42 @@
 		}, {
 			key: 'newGame',
 			value: function newGame(score) {
-				//display game over and high scores.
-				var potential = localStorage.getItem('highscore');
-				if (potential != null) {
-					if (potential < score) {
-						localStorage.setItem('highscore', score);
+				if (this.state.mode == 'normal') {
+					//display game over and high scores.
+					var potential = localStorage.getItem('nhighscore');
+					if (potential != null) {
+						if (potential < score) {
+							localStorage.setItem('nhighscore', score);
+							potential = score;
+						}
+					} else {
+						localStorage.setItem('nhighscore', score);
 						potential = score;
 					}
-				} else {
-					localStorage.setItem('highscore', score);
-					potential = score;
-				}
-				//set the high score in meta.
-				this.setState({ highscore: potential, credit: this.state.credit - 1 });
-				setTimeout(function () {
-					document.location.reload(true);
-				}, 2000);
+					//set high score in meta
+					this.setState({ nhighscore: potential, credit: this.state.credit - 1 });
+					setTimeout(function () {
+						document.location.reload(true);
+					}, 2000); //two seconds before new game started
+				} else if (this.state.mode == 'visual') //incase it may be some other random thing to trigger else
+					{
+						//display game over and high scores.
+						var potential = localStorage.getItem('vhighscore');
+						if (potential != null) {
+							if (potential < score) {
+								localStorage.setItem('vhighscore', score);
+								potential = score;
+							}
+						} else {
+							localStorage.setItem('vhighscore', score);
+							potential = score;
+						}
+						//set high score in meta
+						this.setState({ vhighscore: potential, credit: this.state.credit - 1 });
+						setTimeout(function () {
+							document.location.reload(true);
+						}, 2000); //two seconds before new game started
+					}
 			}
 		}, {
 			key: 'setMeta',
@@ -21945,13 +21979,13 @@
 						this.setState({ dashcounter: this.state.dashcounter + 1 });
 						if (this.state.dashcounter == 1) {
 							var msg = 'PRESS N for Normal Mode,';
-							window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+							if (!this.state.instructions) window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
 						} else if (this.state.dashcounter == 2) {
 							var msg = 'Press v for Visual Mode,';
-							window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+							if (!this.state.instructions) window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
 						} else {
 							var msg = 'Then any button to begin,';
-							window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+							if (!this.state.instructions) window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
 						}
 					} else //all else, just print letter by letter with 15 offset
 					{
@@ -21970,8 +22004,12 @@
 				var k = event.keyCode;
 				if (k == 78) //n
 					this.normalMode();else if (k == 86) //v
-					this.visualMode();else if (k == 82) //r
-					this.repeat();
+					this.visualMode();else if (k == 82) //r for any instruction you may have missed
+					this.repeat();else if (k == 75) //k
+					{
+						window.speechSynthesis.cancel();
+					} else if (k == 77) //'m' to reset to menu
+					document.location.reload(true);
 			}
 		}, {
 			key: 'repeat',
@@ -21982,8 +22020,7 @@
 		}, {
 			key: 'setup',
 			value: function setup() {
-				//https://www.html5rocks.com/en/tutorials/canvas/hidpi/
-				///see link above for resolution of text in canvas; canvas is set for proper resolution of img and text here
+				//https://www.html5rocks.com/en/tutorials/canvas/hidpi/ . see link for resolution of text in canvas; canvas is set for proper resolution of img and text here
 				var PIXEL_RATIO = function () {
 					var ctx = document.createElement("canvas").getContext("2d"),
 					    dpr = window.devicePixelRatio || 1,
@@ -22027,8 +22064,10 @@
 				this.state.timer = setTimeout(this.write, 500);
 
 				//custom functionality for repeating audio if last instruction spoken not clearly heard 
-				msg = 'Press r to repeat the last instruction spoken,';
-				window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+
+				msg = 'Click k to skip the instructions, r to repeat';
+				if (!this.state.instructions) window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+
 				this.setState({ lastspoken: 'PRESS N for Normal Mode, ' + 'Press v for Visual Mode' });
 
 				//for img formatting
@@ -22052,8 +22091,12 @@
 				});
 				clearTimeout(this.state.timer); //stop printing text
 				var msg = 'You have selected Normal Mode, The game will proceed as the original space invaders, Click any button to begin';
+				if (!this.state.instructions) {
+					window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+					localStorage.setItem('login', true);
+				}
 				this.setState({ lastspoken: msg });
-				//		window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+				//this.setState({instr: true});
 			}
 		}, {
 			key: 'visualMode',
@@ -22073,8 +22116,13 @@
 				var tmp = 'When invaders shoot and you are in the line of fire, you will hear a siren signalling you to move, , When an invaders is in range, you will be told to shoot. If you cannot shoot an enemy where you are, whether it is a barrier or no enemy, you will be told no enemy.';
 				var xtra = ' The last command said applies until a new command is said. So if the last you hear is shoot and nothing else is said for 20 seconds, that means you have been able to shoot an enemy for those 20 seconds';
 				var msg = 'You have selected Visual Mode, ' + tmp + ', Click any button to begin';
+				if (!this.state.instructions) {
+					window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+					localStorage.setItem('login', true);
+				}
 				this.setState({ lastspoken: tmp });
-				//		window.speechSynthesis.speak(new SpeechSynthesisUtterance(msg));
+
+				//this.setState({instr: true});
 			}
 		}, {
 			key: 'render',
@@ -22089,7 +22137,7 @@
 						this.state.header,
 						' '
 					),
-					_react2.default.createElement(_Meta2.default, { score: this.state.score, highscore: this.state.highscore }),
+					_react2.default.createElement(_Meta2.default, { score: this.state.score, vhighscore: this.state.vhighscore, nhighscore: this.state.nhighscore }),
 					_react2.default.createElement(
 						'div',
 						null,
@@ -23682,18 +23730,29 @@
 
 	//css green '#4abd12'
 	/*TODO: 
-		visual mode decide on degrees of freedom. 
-			Instructions on first time access to website (on refresh no instructions), new tab, etc.
-			sit through instructions without starting game
-			high score visual mode, normal mode, replace score <2> banner
-			stereo into right and left ear if you are about to run into a bullet. if bullet is on your left then signal noise on that side. detect? via check if right position or left position + velocity has it, if collision, then play noise and do not move
-
-			bugs:
-			enemies randomly dissapear??!!!
-
-
+		DONE. now ERASE BARRIERS as enemies go across. When end of screen reached, playerl oses. 
+		when to dramatically speed up the space invaders? in normal mode.
+		smoother enemy animation rm-al. remove enemy sprite, then puff
+			timer
+		have pixel rm-als larger so barrier deterioration looks cleaner
+		background music
+		smoother increase when enemies get low
+		bullet enemy bullet collisions (rm player bullet and rm enemy bullet by chance)
+		lower pitch sound file on special enemy
+		decrease enemy bullet velocity
+		enemyx to proportional values to canvas
+		functionize an escape sequence in gameover or lifelost
+		
 		normal mode
-			Adjust regular parameters
+			Adjust regular parameters. line 723
+				increase enemyxv more and decrease the increase rate of fireRate (firing all too fast)
+		Visual Mode
+			Different parameters using them
+
+	Reason why bullets are not seen when hitting the barriers is the velocityo f the bullets is greater than the distance from the tank to the barrier so the bullet jumps to the middle of the barrier (which is all green) and dissapears)
+
+	Optimizations: 
+		keep track of indices of enemies that have fired true to make bullet management easier and more efficient rather than going through all the enemies to check for the property. marked in code by Bullet Optimization Here (BOH)
 	*/
 
 	var Game = function (_React$Component) {
@@ -23714,9 +23773,11 @@
 				[75 + 2 * 30, 110 + 2 * 30, 145 + 2 * 30, 180 + 2 * 30, 215 + 2 * 30, 250 + 2 * 30, 285 + 2 * 30, 320 + 2 * 30, 355 + 2 * 30, 390 + 2 * 30, 425 + 2 * 30], [75 + 2 * 30, 145 + 2 * 30, 215 + 2 * 30, 285 + 2 * 30, 355 + 2 * 30, 425 + 2 * 30]],
 				enemyy: [[[5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30], [55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30], [105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30], [155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30], [205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30]], [[5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30, 5 + 1 * 30], [55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30, 55 + 1 * 30], [105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30, 105 + 1 * 30], [155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30, 155 + 1 * 30], [205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30, 205 + 1 * 30]]]
 			};
+
 			var speeds = [6, 1],
-			    bveloc = [10, 30],
-			    playerspeeds = [5, 1.5]; //.25
+			    bveloc = [10, 10],
+			    playerspeeds = [5, 1],
+			    fireRates = [.005, .1]; //.25
 
 			var _this = (0, _possibleConstructorReturn3.default)(this, (Game.__proto__ || (0, _getPrototypeOf2.default)(Game)).call(this, props));
 
@@ -23726,7 +23787,7 @@
 				x_tanh: -3.5, ogx_tanh: -3.5, xinterval_tanh: .1, //12/100/2/2
 				requestid: null, lowlimit: 15, maxexv: 1 / 2,
 				maxlowlimit: 3, //more properly min
-				maxfireRate: .5, //10?//change
+				maxfireRate: 1, //10?//change
 				notimes: 0, numdead: 0, pastnumdead: 0,
 				lvlclear: false, lifelost: false, gameover: false, set: false,
 				numberlives: 3, credit: 4, rmEnemy: true, bullettimer: null, start: false, stagger: 0,
@@ -23758,7 +23819,7 @@
 				ebulletsfired: 0, //at max there can be three
 				specialEnemyx: 0, specialEnemyy: 0, activeSpecial: false,
 				specialRate: .01, specialPointRate: 0, sVx: 10, sebound: 0, ogsVx: 2,
-				specialDrawing: 0 }, (0, _defineProperty3.default)(_this$state, 'specialDrawing', 0), (0, _defineProperty3.default)(_this$state, 'enemyxv', 0.03), (0, _defineProperty3.default)(_this$state, 'enemyyv', 30), (0, _defineProperty3.default)(_this$state, 'pastx', -100), (0, _defineProperty3.default)(_this$state, 'ogenemyxv', 0.06), (0, _defineProperty3.default)(_this$state, 'resetEnemies', false), (0, _defineProperty3.default)(_this$state, 'fireRate', 10), (0, _defineProperty3.default)(_this$state, 'ogfireRate', .01), (0, _defineProperty3.default)(_this$state, 'barrierx', []), (0, _defineProperty3.default)(_this$state, 'barriery', []), (0, _defineProperty3.default)(_this$state, 'barriersize', 60), (0, _defineProperty3.default)(_this$state, 'playersize', 30), (0, _defineProperty3.default)(_this$state, 'enemysize', 30), (0, _defineProperty3.default)(_this$state, 'offset', 10), (0, _defineProperty3.default)(_this$state, 'rmEnemy', []), (0, _defineProperty3.default)(_this$state, 'player', new Image(30, 30)), (0, _defineProperty3.default)(_this$state, 'bullet', new Image(5, 5)), (0, _defineProperty3.default)(_this$state, 'scores', [new Image(30, 30), new Image(30, 30), new Image(30, 30), new Image(30, 30)]), (0, _defineProperty3.default)(_this$state, 'enemy', [new Image(30, 30), new Image(30, 30), new Image(30, 30), new Image(30, 30)]), (0, _defineProperty3.default)(_this$state, 'enemy2', [new Image(30, 30), new Image(30, 30), new Image(30, 30)]), (0, _defineProperty3.default)(_this$state, 'enemydead', [new Image(30, 30), new Image(30, 30), new Image(30, 30)]), (0, _defineProperty3.default)(_this$state, 'ebullet', [new Image(10, 10), new Image(10, 10), new Image(10, 10)]), (0, _defineProperty3.default)(_this$state, 'ebullet2', [new Image(10, 10), new Image(10, 10), new Image(10, 10)]), (0, _defineProperty3.default)(_this$state, 'ebullet3', [new Image(10, 10), new Image(10, 10), new Image(10, 10)]), (0, _defineProperty3.default)(_this$state, 'ebullet4', [new Image(10, 10), new Image(10, 10), new Image(10, 10)]), (0, _defineProperty3.default)(_this$state, 'barrierImage', new Image(1, 1)), (0, _defineProperty3.default)(_this$state, 'barrierdeath', new Image(1, 1)), (0, _defineProperty3.default)(_this$state, 'barrierExplosion', new Image(5, 5)), (0, _defineProperty3.default)(_this$state, 'replacementimage', new Image(30, 30)), (0, _defineProperty3.default)(_this$state, 'enemyDeath', new Image(30, 30)), (0, _defineProperty3.default)(_this$state, 'playerDeath', new Image(30, 30)), (0, _defineProperty3.default)(_this$state, 'specialEnemyDeath', new Image(30, 30)), (0, _defineProperty3.default)(_this$state, 'shoot', new Audio(__webpack_require__(272))), (0, _defineProperty3.default)(_this$state, 'enemyshot', new Audio(__webpack_require__(273))), (0, _defineProperty3.default)(_this$state, 'died', new Audio(__webpack_require__(274))), (0, _defineProperty3.default)(_this$state, 'winner', new Audio(__webpack_require__(275))), (0, _defineProperty3.default)(_this$state, 'specialEnemyHere', new Audio(__webpack_require__(276))), (0, _defineProperty3.default)(_this$state, 'warning', new Audio(__webpack_require__(277))), _this$state);
+				specialDrawing: 0 }, (0, _defineProperty3.default)(_this$state, 'specialDrawing', 0), (0, _defineProperty3.default)(_this$state, 'enemyxv', 0.03), (0, _defineProperty3.default)(_this$state, 'enemyyv', 30), (0, _defineProperty3.default)(_this$state, 'pastx', -100), (0, _defineProperty3.default)(_this$state, 'ogenemyxv', 0.06), (0, _defineProperty3.default)(_this$state, 'resetEnemies', false), (0, _defineProperty3.default)(_this$state, 'fireRate', speeds[types.MODE[_this.props.mode]]), (0, _defineProperty3.default)(_this$state, 'ogfireRate', speeds[types.MODE[_this.props.mode]]), (0, _defineProperty3.default)(_this$state, 'barrierx', []), (0, _defineProperty3.default)(_this$state, 'barriery', []), (0, _defineProperty3.default)(_this$state, 'barriersize', 60), (0, _defineProperty3.default)(_this$state, 'playersize', 30), (0, _defineProperty3.default)(_this$state, 'enemysize', 30), (0, _defineProperty3.default)(_this$state, 'offset', 10), (0, _defineProperty3.default)(_this$state, 'rmEnemy', []), (0, _defineProperty3.default)(_this$state, 'player', new Image(30, 30)), (0, _defineProperty3.default)(_this$state, 'bullet', new Image(5, 5)), (0, _defineProperty3.default)(_this$state, 'scores', [new Image(30, 30), new Image(30, 30), new Image(30, 30), new Image(30, 30)]), (0, _defineProperty3.default)(_this$state, 'enemy', [new Image(30, 30), new Image(30, 30), new Image(30, 30), new Image(30, 30)]), (0, _defineProperty3.default)(_this$state, 'enemy2', [new Image(30, 30), new Image(30, 30), new Image(30, 30)]), (0, _defineProperty3.default)(_this$state, 'enemydead', [new Image(30, 30), new Image(30, 30), new Image(30, 30)]), (0, _defineProperty3.default)(_this$state, 'ebullet', [new Image(10, 10), new Image(10, 10), new Image(10, 10)]), (0, _defineProperty3.default)(_this$state, 'ebullet2', [new Image(10, 10), new Image(10, 10), new Image(10, 10)]), (0, _defineProperty3.default)(_this$state, 'ebullet3', [new Image(10, 10), new Image(10, 10), new Image(10, 10)]), (0, _defineProperty3.default)(_this$state, 'ebullet4', [new Image(10, 10), new Image(10, 10), new Image(10, 10)]), (0, _defineProperty3.default)(_this$state, 'barrierImage', new Image(1, 1)), (0, _defineProperty3.default)(_this$state, 'barrierdeath', new Image(1, 1)), (0, _defineProperty3.default)(_this$state, 'barrierExplosion', new Image(5, 5)), (0, _defineProperty3.default)(_this$state, 'replacementimage', new Image(30, 30)), (0, _defineProperty3.default)(_this$state, 'enemyDeath', new Image(30, 30)), (0, _defineProperty3.default)(_this$state, 'playerDeath', new Image(30, 30)), (0, _defineProperty3.default)(_this$state, 'specialEnemyDeath', new Image(30, 30)), (0, _defineProperty3.default)(_this$state, 'shoot', new Audio(__webpack_require__(272))), (0, _defineProperty3.default)(_this$state, 'enemyshot', new Audio(__webpack_require__(273))), (0, _defineProperty3.default)(_this$state, 'died', new Audio(__webpack_require__(274))), (0, _defineProperty3.default)(_this$state, 'winner', new Audio(__webpack_require__(275))), (0, _defineProperty3.default)(_this$state, 'specialEnemyHere', new Audio(__webpack_require__(276))), (0, _defineProperty3.default)(_this$state, 'warning', new Audio(__webpack_require__(277))), (0, _defineProperty3.default)(_this$state, 'crumbling', new Audio(__webpack_require__(278))), _this$state);
 			_this.move = _this.move.bind(_this); //React components using ES6 classes no longer autobind this to non React methods. Thus in constructor add this binding
 			_this.stopmove = _this.stopmove.bind(_this); //upon key lift stop mvment
 			_this.update = _this.update.bind(_this); //update game loop!
@@ -23774,6 +23835,7 @@
 			_this.load = _this.load.bind(_this); //load in the resources
 			_this.reparameterize = _this.reparameterize.bind(_this);
 			_this.nearbyVisualCheck = _this.nearbyVisualCheck.bind(_this);
+			_this.enemyErase = _this.enemyErase.bind(_this);
 			return _this;
 		}
 
@@ -23792,46 +23854,46 @@
 				this.setState({ ctx: tmp_ctx });
 
 				//ebullet1, ebullet1_frame2, ebullet1_frame3, ebullet1_frame4
-				this.state.scores[0].src = __webpack_require__(278);
-				this.state.scores[1].src = __webpack_require__(279);
-				this.state.scores[2].src = __webpack_require__(280);
-				this.state.scores[3].src = __webpack_require__(281);
+				this.state.scores[0].src = __webpack_require__(279);
+				this.state.scores[1].src = __webpack_require__(280);
+				this.state.scores[2].src = __webpack_require__(281);
+				this.state.scores[3].src = __webpack_require__(282);
 
-				this.state.ebullet[0].src = __webpack_require__(282);
-				this.state.ebullet2[0].src = __webpack_require__(283);
-				this.state.ebullet3[0].src = __webpack_require__(284);
-				this.state.ebullet4[0].src = __webpack_require__(285);
+				this.state.ebullet[0].src = __webpack_require__(283);
+				this.state.ebullet2[0].src = __webpack_require__(284);
+				this.state.ebullet3[0].src = __webpack_require__(285);
+				this.state.ebullet4[0].src = __webpack_require__(286);
 
-				this.state.ebullet[1].src = __webpack_require__(286);
-				this.state.ebullet2[1].src = __webpack_require__(287);
-				this.state.ebullet3[1].src = __webpack_require__(288);
-				this.state.ebullet4[1].src = __webpack_require__(289);
+				this.state.ebullet[1].src = __webpack_require__(287);
+				this.state.ebullet2[1].src = __webpack_require__(288);
+				this.state.ebullet3[1].src = __webpack_require__(289);
+				this.state.ebullet4[1].src = __webpack_require__(290);
 
-				this.state.ebullet[2].src = __webpack_require__(290);
-				this.state.ebullet2[2].src = __webpack_require__(291);
-				this.state.ebullet3[2].src = __webpack_require__(292);
-				this.state.ebullet4[2].src = __webpack_require__(293);
+				this.state.ebullet[2].src = __webpack_require__(291);
+				this.state.ebullet2[2].src = __webpack_require__(292);
+				this.state.ebullet3[2].src = __webpack_require__(293);
+				this.state.ebullet4[2].src = __webpack_require__(294);
 
-				this.state.barrierExplosion.src = __webpack_require__(294);
-				this.state.enemyDeath.src = __webpack_require__(295);
-				this.state.playerDeath.src = __webpack_require__(296);
-				this.state.barrierImage.src = __webpack_require__(297);
-				this.state.player.src = __webpack_require__(298);
-				this.state.bullet.src = __webpack_require__(299);
-				this.state.enemy[0].src = __webpack_require__(300);
-				this.state.enemy2[0].src = __webpack_require__(301);
-				this.state.enemy[1].src = __webpack_require__(302);
-				this.state.enemy2[1].src = __webpack_require__(303);
-				this.state.enemy[2].src = __webpack_require__(304);
-				this.state.enemy2[2].src = __webpack_require__(305);
-				this.state.enemy[3].src = __webpack_require__(306);
-				this.state.replacementimage.src = __webpack_require__(307);
+				this.state.barrierExplosion.src = __webpack_require__(295);
+				this.state.enemyDeath.src = __webpack_require__(296);
+				this.state.playerDeath.src = __webpack_require__(297);
+				this.state.barrierImage.src = __webpack_require__(298);
+				this.state.player.src = __webpack_require__(299);
+				this.state.bullet.src = __webpack_require__(300);
+				this.state.enemy[0].src = __webpack_require__(301);
+				this.state.enemy2[0].src = __webpack_require__(302);
+				this.state.enemy[1].src = __webpack_require__(303);
+				this.state.enemy2[1].src = __webpack_require__(304);
+				this.state.enemy[2].src = __webpack_require__(305);
+				this.state.enemy2[2].src = __webpack_require__(306);
+				this.state.enemy[3].src = __webpack_require__(307);
+				this.state.replacementimage.src = __webpack_require__(308);
 
-				this.state.enemydead[0].src = __webpack_require__(308);
-				this.state.enemydead[1].src = __webpack_require__(309);
-				this.state.enemydead[2].src = __webpack_require__(310);
-				this.state.barrierdeath.src = __webpack_require__(311);
-				this.state.specialEnemyDeath.src = __webpack_require__(312);
+				this.state.enemydead[0].src = __webpack_require__(309);
+				this.state.enemydead[1].src = __webpack_require__(310);
+				this.state.enemydead[2].src = __webpack_require__(311);
+				this.state.barrierdeath.src = __webpack_require__(312);
+				this.state.specialEnemyDeath.src = __webpack_require__(313);
 			}
 		}, {
 			key: 'setup',
@@ -23979,6 +24041,8 @@
 											width = this.state.bsize;
 											height = this.state.bsize * 2;
 											this.bulletReset();
+											if (this.state.visual) //indicate to audio player that they shot a barrier.
+												this.state.crumbling.play();
 										}
 								}
 						}
@@ -24189,14 +24253,15 @@
 				for (var i = 0; i < numclear / 2; i++) {
 					factor *= 1.04;
 				}this.setState({ x: this.state.ogx, y: this.state.ogy,
-					enemyxv: this.state.ogenemyxv * factor, numdead: 0, lvlclear: false,
+					enemyxv: this.state.ogenemyxv * factor, numdead: 0, lvlclear: false, ebulletsfired: 0,
 					difficulty: this.state.ogdifficulty * factor, decreasefactor: factor * this.state.ogdecreasefactor,
 					lowlimit: this.state.oglowlimit, fireRate: this.state.ogfireRate,
 					x_tanh: this.state.ogx_tanh
 				});
+
+				alert('og diff ' + this.state.difficulty + '. og dec is ' + this.state.decreasefactor + '.  og low lim is ' + this.state.lowlimit + '. this.state.ogfireRate ' + this.state.fireRate);
 				//	var arr = [this.state.x, this.state.y, this.state.enemyxv, 
 				//this.state.difficulty, this.state.decreasefactor, this.state.lowlimit, this.state.fireRate, this.state.x_tanh];
-				//	console.log('reset ' + arr);
 				var tmpX = [[], [], [], [], []],
 				    tmpY = [[], [], [], [], []];
 				var offing = this.state.enemysize * numclear;
@@ -24255,7 +24320,6 @@
 								//if (this.state.x >= this.state.enemyx[i][j] && this.state.x <= this.state.enemyx[i][j]+this.state.enemysize)
 								if (xpos >= this.state.enemyx[i][j] && xpos <= this.state.enemyx[i][j] + this.state.enemysize) if (!barrierblock) //if in range, and barrier is not in the way, compare to find the closest enemy and mark it
 									{
-										//console.log('enemy!' + i ' is i. j is '+j);
 										var x = this.abs(this.state.enemyx[i][j] - this.state.x);
 										var y = this.abs(this.state.enemyy[i][j] - this.state.y);
 										if (x * x + y * y > max) {
@@ -24283,8 +24347,34 @@
 				}
 			}
 		}, {
+			key: 'enemyErase',
+			value: function enemyErase() //is the enemy making contact with the barrier? if so, then rm the barrier. More enemy erasing*
+			{
+				//check collision with barrier
+				var barrierXUpdate = [],
+				    barrierYUpdate = [];
+				var count = 0;
+				for (var i = 0; i < this.state.barrierx.length; i++) {
+					var rm = false;
+					for (var j = 0; j < 5; j++) {
+						for (var k = 0; k < this.state.numEnemies; k++) {
+							if (this.collide(this.state.barrierx[i], this.state.barriery[i], this.state.enemyx[j][k], this.state.enemyy[j][k], this.state.enemysize))
+								//detect collision with enemy and barrier, if collision there, then rm is true
+								rm = true;
+						}
+					}if (!rm) {
+						barrierXUpdate[count] = this.state.barrierx[i];
+						barrierYUpdate[count++] = this.state.barriery[i];
+					}
+				}
+				this.setState({ barrierx: barrierXUpdate, barriery: barrierYUpdate });
+				//do this when the enemy is past a certain point, do this smarter removing certain areas based on less information. This loop is too computationally expensive in combinations with other inefficient functionalities.
+				//this.enemyErase();
+			}
+		}, {
 			key: 'update',
 			value: function update() {
+				console.log(this.state.fireRate + ' ' + this.state.enemyxv);
 				//if you die
 				if (this.state.lifelost) {
 					this.state.ctx.drawImage(this.state.playerDeath, this.state.x, this.state.y, this.state.playersize, this.state.playersize);
@@ -24294,10 +24384,12 @@
 
 				//check if no enemies remain. Set params back to og, and go again
 				if (this.state.numdead == 5 * this.state.numEnemies) {
-					this.state.winner.play();
+					console.log(this.state.fireRate);
 					this.setState({ /*resetEnemies: true,*/set: false, start: false, numdead: 0,
 						lvlclear: true, notimes: this.state.notimes + 1, activeSpecial: false
 					});
+					this.state.winner.play();
+					if (this.state.visual) window.speechSynthesis.speak(new SpeechSynthesisUtterance(', , , , , Your score is ' + this.state.score)); //+ ', Click any button to continue'));
 					return;
 				}
 
@@ -24312,8 +24404,9 @@
 				if (this.state.pastnumdead != this.state.numdead) //make game harder if enemies killed
 					{
 						var tmpx_tanh = this.state.x_tanh + this.state.xinterval_tanh;
-						var fx = Math.exp(tmpx_tanh) / 2 + 1; //*Math.exp(this.state.x_tanh);
-						var tmpxv = fx * this.state.ogenemyxv;
+						var x_inc = Math.exp(tmpx_tanh) / 2 + 1; //*Math.exp(this.state.x_tanh);
+						var fx = 1.1;
+						var tmpxv = x_inc * this.state.ogenemyxv;
 						if (this.state.enemyxv < 0) tmpxv *= -1;
 
 						//visual part
@@ -24323,7 +24416,8 @@
 								lowlimit: this.state.oglowlimit / this.state.decreasefactor ///1.03 //decrease factor makes it too fastgood number for this decreasing via enemy death on frames
 								, fireRate: this.state.fireRate * fx, x_tanh: tmpx_tanh
 							});
-							if (this.state.numdead > 44) this.setState({ enemyxv: tmpxv * fx }); //increase more rapidly twoards the end
+							//max speed up.
+							if (this.state.numdead > 44) this.setState({ enemyxv: tmpxv * 1.8 }); //increase more rapidly twoards the end
 							if (this.state.fireRate > this.state.maxfireRate) this.setState({ fireRate: this.state.maxfireRate });
 							if (this.abs(this.state.enemyxv) > this.state.maxexv) this.setState({ enemyxv: this.state.enemyxv < 0 ? -this.state.maxexv : this.state.maxexv });
 							if (this.state.lowlimit < this.state.maxlowlimit) this.setState({ lowlimit: this.state.maxlowlimit });
@@ -24346,6 +24440,7 @@
 					this.setState({ fireRate: this.state.maxfireRate });
 				}
 				var yupdate = 0;
+
 				////ENEMY PARAMETER ADJUSTMENTS via enemy increase (more than row increase)////
 				if (this.state.upperx > this.state.width - this.state.enemysize || this.state.lowerx < 0) {
 					var up = false;
@@ -24380,6 +24475,9 @@
 				    tmpStag = [[], [], [], [], []];
 				for (var i = 4; i > -1; i--) {
 					var tmpt = this.enemyUpdate(i, stagger);
+					///BUG HERE
+					if (this.state.gameover) //break out if enemies reach your laser base/end of screen
+						return;
 					tmpsx[i] = tmpt[0];
 					tmpsy[i] = tmpt[1];
 					tmpFired[i] = tmpt[2];
@@ -24392,7 +24490,6 @@
 					enemybx: tmpbx, enemyby: tmpby,
 					ebStagger: tmpStag
 				});
-
 				//bullet
 				if (this.state.fired) {
 					var rm = false;
@@ -24460,6 +24557,7 @@
 							if (i == 3 || i == 4) img = this.state.enemydead[0];else if (i == 1 || i == 2) img = this.state.enemydead[1];else if (i == 0) img = this.state.enemydead[2];
 							if (true) this.state.ctx.drawImage(img, this.state.enemyx[i][j], this.state.enemyy[i][j], this.state.enemysize, this.state.enemysize);
 						}
+						this.state.enemyFired[i][j] = false; //make sure bullets fired from before dissapear
 					}
 				}
 				//through barrierdeath
@@ -24485,6 +24583,11 @@
 		}, {
 			key: 'enemyUpdate',
 			value: function enemyUpdate(row, stagger) {
+				//215 y position right in front of barreir
+				//245 y pos first step in barrier
+				//305 in front of me
+				//335 past me
+				//365 end of screen
 				var tmpx = this.state.enemyx[row],
 				    tmpy = this.state.enemyy[row];
 				var tmpFired = this.state.enemyFired[row];
@@ -24495,11 +24598,19 @@
 				    rmIndex = -1;
 				for (var i = 0; i < this.state.numEnemies; i++) {
 					if (this.state.enemyState[row][i] == 'ALIVE') {
+						if (this.state.enemyy[row][i] >= 565) //you lose game if it goes past your laser base
+							{
+								this.setState({ gameover: true });
+								this.props.onNewGame(this.state.score); //send back score (up to parent) to see if its high score and reset game
+								return;
+							}
 						//to shoot or not to shoot
 						if (!this.state.enemyFired[row][i]) {
 							//roll a die to fire
 							var test = Math.random() * 100;
-							if (test < this.state.fireRate && this.state.ebulletsfired <= 3) //max three bullets allowed to be fired at once
+							//if(this.state.ebulletsfired <=3)
+							//console.log(test + ' . ' + this.state.fireRate+' ebulletsfired ' + this.state.ebulletsfired);
+							if (test < this.state.fireRate && this.state.ebulletsfired < 3) //max three bullets allowed to be fired at once
 								{
 									tmpFired[i] = true;
 									this.setState({ ebulletsfired: this.state.ebulletsfired + 1 });
@@ -24557,8 +24668,15 @@
 								this.props.metaChange(this.state.score, this.state.numberlives);
 								if (this.state.numberlives == 0) {
 									this.setState({ gameover: true });
-									this.props.onNewGame(this.state.score);
+									this.props.onNewGame(this.state.score); //send back score (up to parent) to see if its high score
 								}
+								if (this.state.visual) //state how many lives left
+									{
+										window.speechSynthesis.cancel();
+										if (this.state.numberlives > 1) window.speechSynthesis.speak(new SpeechSynthesisUtterance(this.state.numberlives + ' lives left'));
+										if (this.state.numberlives == 1) window.speechSynthesis.speak(new SpeechSynthesisUtterance(this.state.numberlives + ' life left'));
+										if (this.state.numberlives == 0) window.speechSynthesis.speak(new SpeechSynthesisUtterance('Game Over'));
+									}
 								tmpFired[i] = false; //collision happened, so turn off fire on bullet
 								this.setState({ lifelost: true, set: false, start: false });
 								//this.regulate();
@@ -24615,23 +24733,50 @@
 					var k = event.keyCode;
 					if (k == 37) //move left
 						{
-							//stereo into right and left ear if you are about to run into a bullet. if bullet is on your left then signal noise on that side. detect? via check if right position or left position + velocity has it, if collision, then play noise and do not move
 							this.setState({ xvelocity: -this.state.ogxvelocity });
 							var potentialx = this.state.x + this.state.xvelocity;
-							if (this.collide()) //if collision with bullet
+							//if(this.collide())//if collision with bullet
+							if (this.state.visual) {
 								if (potentialx <= 0) {
 									window.speechSynthesis.cancel();
 									window.speechSynthesis.speak(new SpeechSynthesisUtterance('L Edge'));
 								}
+								potentialx += this.state.xvelocity;
+								//BOH
+								for (var i = 0; i < 5; i++) {
+									for (var j = 0; j < this.state.numEnemies; j++) {
+										if (this.collide(this.state.enemybx[i][j], this.state.enemyby[i][j], potentialx - 5 * this.state.playersize / 4, this.state.y, this.state.playersize + this.state.playersize / 2))
+											//5/4 to detect wider range on left
+											{
+												this.setState({ xvelocity: 0 }); //do not move if in danger
+												window.speechSynthesis.cancel();
+												window.speechSynthesis.speak(new SpeechSynthesisUtterance('Halt'));
+											}
+									}
+								}
+							}
 						} else if (k == 39) //move right
 						{
 							this.setState({ xvelocity: this.state.ogxvelocity });
 							var potentialx = this.state.x + this.state.xvelocity;
-							if (potentialx >= this.state.width - this.state.playersize) {
-								window.speechSynthesis.cancel();
-								window.speechSynthesis.speak(new SpeechSynthesisUtterance('R Edge'));
+							if (this.state.visual) {
+								if (potentialx >= this.state.width - this.state.playersize) {
+									window.speechSynthesis.cancel();
+									window.speechSynthesis.speak(new SpeechSynthesisUtterance('R Edge'));
+								}
+								potentialx += this.state.xvelocity;
+								//BOH
+								for (var i = 0; i < 5; i++) {
+									for (var j = 0; j < this.state.numEnemies; j++) {
+										if (this.collide(this.state.enemybx[i][j], this.state.enemyby[i][j], potentialx + this.state.playersize / 4, this.state.y, this.state.playersize + this.state.playersize / 2)) {
+											this.setState({ xvelocity: 0 }); //do not move if in danger
+											window.speechSynthesis.cancel();
+											window.speechSynthesis.speak(new SpeechSynthesisUtterance('Halt'));
+										}
+									}
+								}
 							}
-						} else if (k == 16) //shift key
+						} else if (k == 32) //space key
 						{
 							if (this.state.numberlives > 0 && !this.state.fired) {
 								this.state.shoot.play();
@@ -24736,214 +24881,220 @@
 /* 278 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "8d914bd51094379c51677f292be2ddb1.png";
+	module.exports = __webpack_require__.p + "045f0b96fab144ca1451cbb191ee4e58.mp3";
 
 /***/ },
 /* 279 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "591e5274804839b4299bad32b4f4ab76.png";
+	module.exports = __webpack_require__.p + "8d914bd51094379c51677f292be2ddb1.png";
 
 /***/ },
 /* 280 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "238cc584facc02ded9c3c0ecf9523b87.png";
+	module.exports = __webpack_require__.p + "591e5274804839b4299bad32b4f4ab76.png";
 
 /***/ },
 /* 281 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "1f3d428c13023e855927817a58fb3dd8.png";
+	module.exports = __webpack_require__.p + "238cc584facc02ded9c3c0ecf9523b87.png";
 
 /***/ },
 /* 282 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "6fcf925dfa5213d2ba6442f5ec08057a.png";
+	module.exports = __webpack_require__.p + "1f3d428c13023e855927817a58fb3dd8.png";
 
 /***/ },
 /* 283 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "f2c72ada7b10cb775bb2277ea70585f7.png";
+	module.exports = __webpack_require__.p + "6fcf925dfa5213d2ba6442f5ec08057a.png";
 
 /***/ },
 /* 284 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "fdba06607cf87165daca3959e21cd1ae.png";
+	module.exports = __webpack_require__.p + "f2c72ada7b10cb775bb2277ea70585f7.png";
 
 /***/ },
 /* 285 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "b2cf7ef2ef29e4d77845cfa45ce23c60.png";
+	module.exports = __webpack_require__.p + "fdba06607cf87165daca3959e21cd1ae.png";
 
 /***/ },
 /* 286 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "5e5373726e2cd64fd78a9c2fb444cbd4.png";
+	module.exports = __webpack_require__.p + "b2cf7ef2ef29e4d77845cfa45ce23c60.png";
 
 /***/ },
 /* 287 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "d9acd2dd73370194f814e502a9386bb2.png";
+	module.exports = __webpack_require__.p + "5e5373726e2cd64fd78a9c2fb444cbd4.png";
 
 /***/ },
 /* 288 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "6bf87f087450a0e461b7c73d8eb31ccb.png";
+	module.exports = __webpack_require__.p + "d9acd2dd73370194f814e502a9386bb2.png";
 
 /***/ },
 /* 289 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "49311b748a61ef49c8e2c06ef064be59.png";
+	module.exports = __webpack_require__.p + "6bf87f087450a0e461b7c73d8eb31ccb.png";
 
 /***/ },
 /* 290 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "f4aff0a3d8df30870c713d3210e879b9.png";
+	module.exports = __webpack_require__.p + "49311b748a61ef49c8e2c06ef064be59.png";
 
 /***/ },
 /* 291 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "b03ca5c786a07aa35448c577014b7a61.png";
+	module.exports = __webpack_require__.p + "f4aff0a3d8df30870c713d3210e879b9.png";
 
 /***/ },
 /* 292 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "dd8f5c6907bd6ebccb5d5462cbfb1983.png";
+	module.exports = __webpack_require__.p + "b03ca5c786a07aa35448c577014b7a61.png";
 
 /***/ },
 /* 293 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "976b9013c3d31c29c82324481ba8b771.png";
+	module.exports = __webpack_require__.p + "dd8f5c6907bd6ebccb5d5462cbfb1983.png";
 
 /***/ },
 /* 294 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "8e0ffb617f56d7bf626f4a4a5f3bd70f.png";
+	module.exports = __webpack_require__.p + "976b9013c3d31c29c82324481ba8b771.png";
 
 /***/ },
 /* 295 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "ee1aa54b70b725c2dc531489965c09c1.png";
+	module.exports = __webpack_require__.p + "8e0ffb617f56d7bf626f4a4a5f3bd70f.png";
 
 /***/ },
 /* 296 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "62d12d813450f2efe84d710c87f2c215.png";
+	module.exports = __webpack_require__.p + "ee1aa54b70b725c2dc531489965c09c1.png";
 
 /***/ },
 /* 297 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "d51e5e3426eb957f5bb63f823b292bd2.png";
+	module.exports = __webpack_require__.p + "62d12d813450f2efe84d710c87f2c215.png";
 
 /***/ },
 /* 298 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "bb072b9cb8646ccbcec0e330f89103d8.png";
+	module.exports = __webpack_require__.p + "d51e5e3426eb957f5bb63f823b292bd2.png";
 
 /***/ },
 /* 299 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "adfe1cf0a7b4df49b35d1742e9ff98aa.png";
+	module.exports = __webpack_require__.p + "bb072b9cb8646ccbcec0e330f89103d8.png";
 
 /***/ },
 /* 300 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "4164945c40b4114181311f089d959e33.png";
+	module.exports = __webpack_require__.p + "adfe1cf0a7b4df49b35d1742e9ff98aa.png";
 
 /***/ },
 /* 301 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "fd027b47802a238e7f367687fda5eeed.png";
+	module.exports = __webpack_require__.p + "4164945c40b4114181311f089d959e33.png";
 
 /***/ },
 /* 302 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "b0b2e3216d0bc90bb726d38a7b452aeb.png";
+	module.exports = __webpack_require__.p + "fd027b47802a238e7f367687fda5eeed.png";
 
 /***/ },
 /* 303 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "1efe5480e4a75f44aab58dfc739b012b.png";
+	module.exports = __webpack_require__.p + "b0b2e3216d0bc90bb726d38a7b452aeb.png";
 
 /***/ },
 /* 304 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "8826bc14a57022c8d03df4e375f3927b.png";
+	module.exports = __webpack_require__.p + "1efe5480e4a75f44aab58dfc739b012b.png";
 
 /***/ },
 /* 305 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "3726bb9a4ff6c9ebc3e274e287488475.png";
+	module.exports = __webpack_require__.p + "8826bc14a57022c8d03df4e375f3927b.png";
 
 /***/ },
 /* 306 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "c04ee83a090a15abaca4687c65d8cf80.png";
+	module.exports = __webpack_require__.p + "3726bb9a4ff6c9ebc3e274e287488475.png";
 
 /***/ },
 /* 307 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "cb43cd69620e9f575066ecfcd94a3945.png";
+	module.exports = __webpack_require__.p + "c04ee83a090a15abaca4687c65d8cf80.png";
 
 /***/ },
 /* 308 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "04d2f9c0b30c5c94dc4dde685b066424.png";
+	module.exports = __webpack_require__.p + "cb43cd69620e9f575066ecfcd94a3945.png";
 
 /***/ },
 /* 309 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "da06531e0dff96d4b6a12c89d018f90a.png";
+	module.exports = __webpack_require__.p + "04d2f9c0b30c5c94dc4dde685b066424.png";
 
 /***/ },
 /* 310 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "3a3893b2f5f368812f8972f19107b6d6.png";
+	module.exports = __webpack_require__.p + "da06531e0dff96d4b6a12c89d018f90a.png";
 
 /***/ },
 /* 311 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "9bc5efff7483f7c7458e63473bf301d1.png";
+	module.exports = __webpack_require__.p + "3a3893b2f5f368812f8972f19107b6d6.png";
 
 /***/ },
 /* 312 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__.p + "cb91eecbda5603e028ec389e3f7422e7.png";
+	module.exports = __webpack_require__.p + "9bc5efff7483f7c7458e63473bf301d1.png";
 
 /***/ },
 /* 313 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = __webpack_require__.p + "cb91eecbda5603e028ec389e3f7422e7.png";
+
+/***/ },
+/* 314 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -25002,7 +25153,7 @@
 	                                        _react2.default.createElement(
 	                                                'h2',
 	                                                null,
-	                                                'SCORE< 1 >'
+	                                                'SCORE'
 	                                        ),
 	                                        '  ' + this.props.score
 	                                ),
@@ -25012,9 +25163,9 @@
 	                                        _react2.default.createElement(
 	                                                'h2',
 	                                                null,
-	                                                'HI-SCORE'
+	                                                'HI-SCORE [N]'
 	                                        ),
-	                                        '     ' + this.props.highscore
+	                                        '     ' + this.props.nhighscore
 	                                ),
 	                                _react2.default.createElement(
 	                                        'div',
@@ -25022,8 +25173,9 @@
 	                                        _react2.default.createElement(
 	                                                'h2',
 	                                                null,
-	                                                'SCORE< 2 >'
-	                                        )
+	                                                'HI-SCORE [V]'
+	                                        ),
+	                                        '     ' + this.props.vhighscore
 	                                )
 	                        );
 	                }
@@ -25034,7 +25186,7 @@
 	exports.default = App;
 
 /***/ },
-/* 314 */
+/* 315 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
